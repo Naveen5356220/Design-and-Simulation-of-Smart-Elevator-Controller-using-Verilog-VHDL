@@ -1,0 +1,81 @@
+module elevator_controller(
+    input clk,
+    input reset,
+    input [1:0] request_floor,
+    output reg [1:0] current_floor,
+    output reg door_open,
+    output reg moving_up,
+    output reg moving_down
+);
+
+parameter IDLE = 2'b00,
+          MOVE_UP = 2'b01,
+          MOVE_DOWN = 2'b10,
+          DOOR_OPEN = 2'b11;
+
+reg [1:0] state;
+
+always @(posedge clk or posedge reset)
+begin
+    if(reset)
+    begin
+        state <= IDLE;
+        current_floor <= 0;
+        door_open <= 0;
+        moving_up <= 0;
+        moving_down <= 0;
+    end
+
+    else
+    begin
+        case(state)
+
+        IDLE:
+        begin
+            door_open <= 0;
+
+            if(request_floor > current_floor)
+                state <= MOVE_UP;
+
+            else if(request_floor < current_floor)
+                state <= MOVE_DOWN;
+
+            else
+                state <= DOOR_OPEN;
+        end
+
+        MOVE_UP:
+        begin
+            moving_up <= 1;
+            current_floor <= current_floor + 1;
+
+            if(current_floor == request_floor)
+            begin
+                moving_up <= 0;
+                state <= DOOR_OPEN;
+            end
+        end
+
+        MOVE_DOWN:
+        begin
+            moving_down <= 1;
+            current_floor <= current_floor - 1;
+
+            if(current_floor == request_floor)
+            begin
+                moving_down <= 0;
+                state <= DOOR_OPEN;
+            end
+        end
+
+        DOOR_OPEN:
+        begin
+            door_open <= 1;
+            state <= IDLE;
+        end
+
+        endcase
+    end
+end
+
+endmodule
